@@ -1,7 +1,7 @@
 import sys
 
 
-if not len(sys.argv) == 3:
+if len(sys.argv) != 3:
 	print("Usage: main.py <in_file.vmf> <out_file.map>")
 	sys.exit()
 
@@ -17,9 +17,8 @@ TEXTURE_CONVERT = {
 
 #f = open("koth_sawmill_d.vmf", "r")
 print(sys.argv[1])
-f = open(sys.argv[1], "r")
-LINES = f.readlines()
-f.close()
+with open(sys.argv[1], "r") as f:
+	LINES = f.readlines()
 
 
 class ent:
@@ -37,17 +36,17 @@ class ent:
 			#print(splitPoint)
 			#print(Lines[index][0:splitPoint].replace('"','').replace('\t',''), Lines[index][splitPoint:].replace('"','').replace('\n','') )
 
-			key = Lines[index][0:splitPoint].replace('"','').replace('\t','')
+			key = Lines[index][:splitPoint].replace('"', '').replace('\t', '')
 			value = Lines[index][splitPoint+1:].replace('"','').replace('\n','')
-			
+
 			self.keys[ key ] = value
 			index += 1
 			self.size += 1
-			
+
 
 		#print(self.keys)
 
-		while not "}" in Lines[index]:
+		while "}" not in Lines[index]:
 			self.ents.append(ent(Lines, index))
 			index += self.ents[-1].size
 			self.size += self.ents[-1].size
@@ -67,7 +66,7 @@ class ent:
 	def ToMapString(self):
 		out = "{\n"
 		for key in self.keys:
-			out += '"' + key + '" "' + self.keys[key] + '"\n'
+			out += f'"{key}" "{self.keys[key]}' + '"\n'
 
 		for en in self.ents:
 			if en.name == "solid":
@@ -85,10 +84,10 @@ class ent:
 					#out += " -0 -0 -0 1 1\n"
 					out += "[ " + side.keys["uaxis"][1:side.keys["uaxis"].find("] ") ] + " ] "
 					out += "[ " + side.keys["vaxis"][1:side.keys["vaxis"].find("] ") ] + " ] "
-					out += rotation + " " #rotation
+					out += f"{rotation} "
 					out += side.keys["uaxis"][side.keys["uaxis"].find("] ")+2: ] + " "
 					out += side.keys["vaxis"][side.keys["vaxis"].find("] ")+2: ] + "\n"
-					
+
 				out += "}\n"
 
 		out += "}\n"
@@ -105,16 +104,11 @@ while index < len(LINES):
 	entities.append( le )
 	print(le.name)
 
-#print(entities[-1].name)
+with open(sys.argv[2], "w") as f:
+	f.write("// Game: Quake\n")
+	f.write("// Format: Valve\n")
 
-f = open(sys.argv[2], "w")
-
-f.write("// Game: Quake\n")
-f.write("// Format: Valve\n")
-
-for i in entities:
-	t = i.ToMapString()
-	#print(t)
-	f.write(t)
-
-f.close()
+	for i in entities:
+		t = i.ToMapString()
+		#print(t)
+		f.write(t)
